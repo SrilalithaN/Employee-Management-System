@@ -49,7 +49,7 @@ function start() {
         case "Add Roles":
           addRoles();
           break;
-        case "Add Employee":
+        case "Add Employees":
           addEmployee();
           break;
         case "Upadate Employee Role":
@@ -73,7 +73,7 @@ function viewDepartment() {
 
 function viewRoles() {
   let qry =
-    "SELECT roles.id AS RoleID,roles.title AS JOB_TITLE department.name AS Department_Name,roles.salary AS Salary from role join department ON roles.department_id=department.id ORDER BY roles.id";
+    "SELECT roles.id AS RoleID,roles.title AS JOB_TITLE,department.dept_name AS Department_Name,roles.salary AS Salary from roles JOIN department ON roles.department_id=department.id ORDER BY roles.id";
   db.query(qry, (err, results) => {
     if (err) throw err;
     console.table(results);
@@ -83,7 +83,7 @@ function viewRoles() {
 
 function viewEmployees() {
   let qry =
-    "SELECT employee.id,employee.first_name,employee.last_name,department.name,roles.title,roles.salary,employee.manager_id from role JOIN employee on employee.roles_id=roles.id JOIN department on department_id= roles.department_id ORDER BY employee.id ";
+    "SELECT employee.id,employee.first_name,employee.last_name,department.dept_name,roles.title,roles.salary,employee.manager_id from roles JOIN employee on employee.roles_id=roles.id JOIN department on department_id= roles.department_id ORDER BY employee.id ";
   db.query(qry, (err, results) => {
     if (err) throw err;
     console.table(results);
@@ -94,10 +94,10 @@ function viewEmployees() {
 function addEmployee() {
   let roleArray = [];
   let empArray = [];
-  let qry = "SELECT * from roles";
+  let qry = "Select * from roles";
   db.query(qry, (err, results) => {
     if (err) throw err;
-    let qry2 = "SELECT * from employees";
+    let qry2 = "Select * from employee";
     db.query(qry2, (err, results2) => {
       if (err) throw err;
       inquirer
@@ -117,8 +117,8 @@ function addEmployee() {
             type: "list",
             message: "Enter the employee's roleID",
             choices: function () {
-              for (i = 0; i < results.length; i++) {
-                roleArray.push(results[i].roles_title);
+              for (let i = 0; i < results.length; i++) {
+                roleArray.push(results[i].title);
               }
               return roleArray;
             },
@@ -128,7 +128,7 @@ function addEmployee() {
             type: "list",
             message: "Enter the manager id if there is a manager",
             choices: function () {
-              for (j = 0; j < results2.length; j++) {
+              for (let j = 0; j < results2.length; j++) {
                 empArray.push(results2[j].first_name);
               }
               return empArray;
@@ -136,13 +136,13 @@ function addEmployee() {
           },
         ])
         .then((answer) => {
-          let manager_id = empArray.indexOf(answer.managerid) + 1;
+          let manager_ID = empArray.indexOf(answer.managerid) + 1;
           let roleid = roleArray.indexOf(answer.role) + 1;
           let qry =
-            "INSERT INTO employee(first_name,last_name,role_id,manager_id)VALUES(?,?,?,?)";
+            "INSERT INTO employee(first_name,last_name,roles_id,manager_id)VALUES(?,?,?,?)";
           db.query(
             qry,
-            [answer.firstname, answer.lastname, roleid, manager_id],
+            [answer.firstname, answer.lastname, roleid, manager_ID],
             (err, results) => {
               if (err) throw err;
               console.log("Employee added successfully");
@@ -153,19 +153,19 @@ function addEmployee() {
     });
   });
 }
-function addRole() {
+function addRoles() {
   let choiceArray = [];
   db.query("select * from department", (err, results) => {
     if (err) throw err;
     inquirer
       .prompt([
         {
-          name: "role-title",
+          name: "roletitle",
           type: "input",
           message: "Enter the role title",
         },
         {
-          name: "role-salary",
+          name: "rolesalary",
           type: "input",
           message: "Enter the salary for the role",
         },
@@ -175,7 +175,7 @@ function addRole() {
           message: "Enter the department name of the role",
           choices: function () {
             for (let i = 0; i < results.length; i++) {
-              choiceArray.push(results[i].name);
+              choiceArray.push(results[i].dept_name);
             }
             return choiceArray;
           },
@@ -187,11 +187,11 @@ function addRole() {
         let qry = "INSERT INTO roles(title,salary,department_id) VALUES(?,?,?)";
         db.query(
           qry,
-          [answer.role - title, answer.role - salary, deptID],
+          [answer.roletitle, answer.rolesalary, deptID],
           (err, results) => {
             if (err) throw err;
             console.log("New role added successfully");
-            console.table(results);
+
             viewRoles();
           }
         );
@@ -207,7 +207,7 @@ function addDepartment() {
       message: "Enter the new department",
     })
     .then((answer) => {
-      let qry = "INSERT INTO department (name) VALUES (?)";
+      let qry = "INSERT INTO department (dept_name) VALUES (?)";
       db.query(qry, answer.departmentname, (err, results) => {
         if (err) throw err;
         console.log("NEW DEPARTMENT ADDED ");
