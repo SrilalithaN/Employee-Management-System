@@ -1,6 +1,7 @@
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
 const consoleTable = require("console.table");
+const { createPromptModule } = require("inquirer");
 
 const db = mysql.createConnection({
   host: "localhost",
@@ -155,7 +156,7 @@ function addEmployee() {
 }
 function addRoles() {
   let choiceArray = [];
-  db.query("select * from department", (err, results) => {
+  db.query("SELECT * FROM department", (err, results) => {
     if (err) throw err;
     inquirer
       .prompt([
@@ -214,4 +215,75 @@ function addDepartment() {
         viewDepartment();
       });
     });
+}
+
+function updateEmployeeRole() {
+  let empnameArray = [];
+  let qry = "SELECT * FROM employee";
+  db.query(qry, (err, results) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "employeename",
+          type: "list",
+          message: "Select the employee you wish to update",
+          choices: function () {
+            for (let i = 0; i < results.length; i++) {
+              empnameArray.push(
+                results[i].id +
+                  "." +
+                  results[i].first_name +
+                  " " +
+                  results[i].last_name
+              );
+            }
+            return empnameArray;
+          },
+        },
+      ])
+      .then((answer) => {
+        let empID = empnameArray.indexOf(answer.employeename) + 1;
+        //console.log(empID);
+        updateRole(empID);
+      });
+  });
+}
+
+function updateRole(empID) {
+  let newRoleArray = [];
+  let qry2 = "SELECT * FROM roles";
+  db.query(qry2, (err, results2) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "roletitle",
+          type: "list",
+          message: "Select the new role for the employee",
+          choices: function () {
+            for (let j = 0; j < results2.length; j++) {
+              newRoleArray.push(results2[j].title);
+            }
+            return newRoleArray;
+          },
+        },
+      ])
+      .then((answer) => {
+        let newrole = answer.roletitle;
+        let roleid = newRoleArray.indexOf(newrole) + 1;
+
+        let qry = "UPDATE employee SET roles_id = ? WHERE employee.id = ?";
+        db.query(qry, [roleid, empID], (err, results) => {
+          if (err) throw err;
+          console.log("Employee Role updated");
+          console.tables(results);
+          viewEmployees();
+        });
+      });
+  });
+}
+
+function exitPrompt() {
+  db.end();
 }
