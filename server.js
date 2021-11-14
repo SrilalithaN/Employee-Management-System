@@ -1,6 +1,6 @@
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
-require("console.table"); 
+const consoleTable = require("console.table");
 const { createPromptModule } = require("inquirer");
 
 const db = mysql.createConnection({
@@ -30,6 +30,9 @@ function start() {
         "Add Roles",
         "Add Employees",
         "Update Employee Role",
+        "Delete Department",
+        "Delete Role",
+        "Delete Employee",
         "Exit",
       ],
     })
@@ -55,6 +58,15 @@ function start() {
           break;
         case "Update Employee Role":
           updateEmployeeRole();
+          break;
+        case "Delete Department":
+          deleteDepartment();
+          break;
+        case "Delete Role":
+          deleteRole();
+          break;
+        case "Delete Employee":
+          deleteEmployee();
           break;
         case "Exit":
           exitPrompt();
@@ -219,7 +231,6 @@ function addDepartment() {
 }
 
 function updateEmployeeRole() {
- 
   let empnameArray = [];
   let qry = "SELECT * FROM employee";
   db.query(qry, (err, results) => {
@@ -246,18 +257,17 @@ function updateEmployeeRole() {
       ])
       .then((answer) => {
         let empID = empnameArray.indexOf(answer.employeename) + 1;
-     
+
         updateRole(empID);
       });
   });
 }
 
 function updateRole(empID) {
- 
   let newRoleArray = [];
   let qry2 = "SELECT * FROM roles";
   db.query(qry2, (err, results2) => {
-    if (err) console.log(err);
+    if (err) throw err;
     console.log(results2);
     inquirer
       .prompt([
@@ -269,7 +279,7 @@ function updateRole(empID) {
             for (let j = 0; j < results2.length; j++) {
               newRoleArray.push(results2[j].title);
             }
-    
+
             return newRoleArray;
           },
         },
@@ -283,6 +293,102 @@ function updateRole(empID) {
           if (err) throw err;
           console.log("Employee Role updated");
           //console.tables(results);
+          viewEmployees();
+        });
+      });
+  });
+}
+function deleteDepartment() {
+  let deptArray = [];
+  let qry = "SELECT * FROM department";
+  db.query(qry, (err, results) => {
+    if (err) throw err;
+    inquirer.prompt([
+      {
+        name: "department",
+        type: "list",
+        message: "Select the department you wish to delete",
+        choices: function () {
+          for (var i = 0; i < results.length; i++) {
+            deptArray.push(results[i].dept_name);
+          }
+          return deptArray;
+        },
+      },
+    ]);
+  }).then((answer) => {
+    let deptID = deptArray.indexOf(answer.department) + 1;
+    console.log(deptID);
+    let qry1 = "DELETE FROM department WHERE id =?";
+    db.query(qry1, [deptID], (err, results1) => {
+      if (err) throw err;
+      console.log("Department deleted successfully");
+      viewDepartment();
+    });
+  });
+}
+function deleteRole() {
+  let roleArray = [];
+  let qry = "SELECT * FROM roles";
+  db.query(qry, (err, results) => {
+    if (err) throw err;
+    inquirer
+      .prompt({
+        name: "role",
+        type: "list",
+        message: "Select the role you wish to delete",
+        choices: function () {
+          for (let i = 0; i < results.length; i++) {
+            roleArray.push(results[i].title);
+          }
+          return roleArray;
+        },
+      })
+      .then((answer) => {
+        let roleid = roleArray.indexOf(answer.role) + 1;
+        let qry = "DELETE FROM roles WHERE id =?";
+        db.query(qry, [roleid], (err, results1) => {
+          if (err) throw err;
+          console.log("Deleted the selected role successfully");
+          viewRoles();
+        });
+      });
+  });
+}
+
+function deleteEmployee() {
+  let empnameArray = [];
+
+  let qry = "SELECT * FROM employee";
+  db.query(qry, (err, results) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "employeename",
+          type: "list",
+          message: "Select employee whom you wish to delete",
+          choices: function () {
+            for (let i = 0; i < results.length; i++) {
+              empnameArray.push(
+                results[i].id +
+                  "." +
+                  results[i].first_name +
+                  " " +
+                  results[i].last_name
+              );
+            }
+            return empnameArray;
+          },
+        },
+      ])
+      .then((answer) => {
+        let empid = empnameArray.indexOf(answer.employeename) + 1;
+        console.log(empid);
+        let qry = "DELETE FROM employee where id=?";
+        db.query(qry, empid, (err, results2) => {
+          if (err) throw err;
+          console.log("Selected Employee Deleted");
           viewEmployees();
         });
       });
