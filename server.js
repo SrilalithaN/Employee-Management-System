@@ -1,6 +1,6 @@
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
-const consoleTable = require("console.table");
+require("console.table"); 
 const { createPromptModule } = require("inquirer");
 
 const db = mysql.createConnection({
@@ -53,7 +53,7 @@ function start() {
         case "Add Employees":
           addEmployee();
           break;
-        case "Upadate Employee Role":
+        case "Update Employee Role":
           updateEmployeeRole();
           break;
         case "Exit":
@@ -83,6 +83,7 @@ function viewRoles() {
 }
 
 function viewEmployees() {
+  console.log("test");
   let qry =
     "SELECT employee.id,employee.first_name,employee.last_name,department.dept_name,roles.title,roles.salary,employee.manager_id from roles JOIN employee on employee.roles_id=roles.id JOIN department on department_id= roles.department_id ORDER BY employee.id ";
   db.query(qry, (err, results) => {
@@ -218,6 +219,7 @@ function addDepartment() {
 }
 
 function updateEmployeeRole() {
+ 
   let empnameArray = [];
   let qry = "SELECT * FROM employee";
   db.query(qry, (err, results) => {
@@ -244,17 +246,19 @@ function updateEmployeeRole() {
       ])
       .then((answer) => {
         let empID = empnameArray.indexOf(answer.employeename) + 1;
-        //console.log(empID);
+     
         updateRole(empID);
       });
   });
 }
 
 function updateRole(empID) {
+ 
   let newRoleArray = [];
   let qry2 = "SELECT * FROM roles";
   db.query(qry2, (err, results2) => {
-    if (err) throw err;
+    if (err) console.log(err);
+    console.log(results2);
     inquirer
       .prompt([
         {
@@ -265,6 +269,7 @@ function updateRole(empID) {
             for (let j = 0; j < results2.length; j++) {
               newRoleArray.push(results2[j].title);
             }
+    
             return newRoleArray;
           },
         },
@@ -277,7 +282,7 @@ function updateRole(empID) {
         db.query(qry, [roleid, empID], (err, results) => {
           if (err) throw err;
           console.log("Employee Role updated");
-          console.tables(results);
+          //console.tables(results);
           viewEmployees();
         });
       });
