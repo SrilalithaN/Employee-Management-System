@@ -348,6 +348,8 @@ function deleteRole() {
     if (err) throw err;
     inquirer
       .prompt({
+        name: "role",
+        type: "list",
         message: "Select the role you wish to delete",
         choices: function () {
           for (let i = 0; i < results.length; i++) {
