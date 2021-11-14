@@ -9,29 +9,30 @@ VALUES ("Admininistration"),
 
 INSERT INTO roles(title,salary,department_id)
 VALUES
-      ("Administrative Assistant", 80000,1),
-      ("Admin Officer", 100000,1),     
+      ("CEO", 150000,null),
+      ("Admin Assistant", 80000,1),  
+      ("Account Manager",110000,2),   
       ("Accountant",90000,2),     
-      ("Account Manager",110000,2),
+       ("HR Manager", 110000, 3),
       ("HR Associate", 90000,3),
-      ("HR Manager", 110000, 3),
+       ("Sales Manager", 120000,4),
       ("Sales Assistant", 10000,4),
-      ("Sales Manager", 120000,4),
-      ("Associate Developer", 90000,5),
-      ("Lead Developer", 120000, 5);
+       ("Lead Developer", 120000, 5),
+      ("Associate Developer", 90000,5);
+     
 
 INSERT INTO employee (first_name,last_name,roles_id,manager_id)
 VALUES
-    ("Michael","Scott",2, null),
-    ("Dwight","Schrute", 1, 2),
-    ("Oscar","Martinez",4,null),
-    ("Kevin","Malone",3,4),
-   ("Meredith","Palmer",6,null),
-    ("Creed","Bratton",5,6),
-    ("Pamela","Beesly",8,null),
-    ("Jim","Halpert",7,8),
-    ("Andy","Bernard",10, null),
-    ("Angela","Martin",9,10);
+    ("Michael","Scott",1, null),
+    ("Dwight","Schrute", 2, 1),
+    ("Oscar","Martinez",3,1),
+    ("Kevin","Malone",4,3),
+   ("Meredith","Palmer",5,1),
+    ("Creed","Bratton",6,4),
+    ("Pamela","Beesly",7,1),
+    ("Jim","Halpert",8,1),
+    ("Andy","Bernard",9, 3),
+    ("Angela","Martin",10,1);
 
 
   

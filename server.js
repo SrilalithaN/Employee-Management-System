@@ -33,6 +33,9 @@ function start() {
         "Delete Department",
         "Delete Role",
         "Delete Employee",
+        "View by Department",
+        "View by Manager",
+        "View Department Budget",
         "Exit",
       ],
     })
@@ -68,6 +71,15 @@ function start() {
         case "Delete Employee":
           deleteEmployee();
           break;
+        case "View by Department":
+          viewBydept();
+          break;
+        case "View by Manager":
+          viewBymanager();
+          break;
+        case "View Department Budget":
+          departmentBudget();
+          break;
         case "Exit":
           exitPrompt();
           break;
@@ -95,9 +107,9 @@ function viewRoles() {
 }
 
 function viewEmployees() {
-  console.log("test");
   let qry =
-    "SELECT employee.id,employee.first_name,employee.last_name,department.dept_name,roles.title,roles.salary,employee.manager_id from roles JOIN employee on employee.roles_id=roles.id JOIN department on department_id= roles.department_id ORDER BY employee.id ";
+    " SELECT employee.id, employee.first_name, employee.last_name, roles.title, department.dept_name AS department, roles.salary,  CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN roles on employee.roles_id = roles.id LEFT JOIN department on roles.department_id = department.id LEFT JOIN employee manager on manager.id = employee.manager_id";
+
   db.query(qry, (err, results) => {
     if (err) throw err;
     console.table(results);
@@ -303,28 +315,30 @@ function deleteDepartment() {
   let qry = "SELECT * FROM department";
   db.query(qry, (err, results) => {
     if (err) throw err;
-    inquirer.prompt([
-      {
-        name: "department",
-        type: "list",
-        message: "Select the department you wish to delete",
-        choices: function () {
-          for (var i = 0; i < results.length; i++) {
-            deptArray.push(results[i].dept_name);
-          }
-          return deptArray;
+    inquirer
+      .prompt([
+        {
+          name: "department",
+          type: "list",
+          message: "Select the department you wish to delete",
+          choices: function () {
+            for (var i = 0; i < results.length; i++) {
+              deptArray.push(results[i].dept_name);
+            }
+            return deptArray;
+          },
         },
-      },
-    ]);
-  }).then((answer) => {
-    let deptID = deptArray.indexOf(answer.department) + 1;
-    console.log(deptID);
-    let qry1 = "DELETE FROM department WHERE id =?";
-    db.query(qry1, [deptID], (err, results1) => {
-      if (err) throw err;
-      console.log("Department deleted successfully");
-      viewDepartment();
-    });
+      ])
+      .then((answer) => {
+        let deptID = deptArray.indexOf(answer.department) + 1;
+
+        let qry1 = "DELETE FROM department WHERE id =?";
+        db.query(qry1, [deptID], (err, results1) => {
+          if (err) throw err;
+          console.log("Department deleted successfully");
+          viewDepartment();
+        });
+      });
   });
 }
 function deleteRole() {
@@ -334,8 +348,6 @@ function deleteRole() {
     if (err) throw err;
     inquirer
       .prompt({
-        name: "role",
-        type: "list",
         message: "Select the role you wish to delete",
         choices: function () {
           for (let i = 0; i < results.length; i++) {
@@ -394,7 +406,103 @@ function deleteEmployee() {
       });
   });
 }
+function viewBydept() {
+  let deptArray = [];
+  let qry = "select * from department";
+  db.query(qry, (err, results) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "deptname",
+          type: "list",
+          message: "Select the department to view employees by departments",
+          choices: function () {
+            for (let i = 0; i < results.length; i++) {
+              deptArray.push(results[i].dept_name);
+            }
+            return deptArray;
+          },
+        },
+      ])
+      .then((answer) => {
+        let deptid = deptArray.indexOf(answer.deptname) + 1;
+        console.log(deptid);
+        let qry1 =
+          "SELECT employee.id,employee.first_name,employee.last_name,roles.salary,roles.title,department.dept_name FROM roles JOIN employee on employee.roles_id=roles.id JOIN department on department.id=roles.department_id WHERE department.id=? ";
+        db.query(qry1, deptid, (err, results1) => {
+          if (err) throw err;
+          console.table(results1);
+          start();
+        });
+      });
+  });
+}
+function viewBymanager() {
+  let managerArray = [];
+  let qry = "SELECT * FROM employee WHERE manager_id >=0";
+  db.query(qry, (err, results) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "manager",
+          type: "list",
+          message: "Select the manager to view employees by manager",
+          choices: function () {
+            for (let i = 0; i < results.length; i++) {
+              managerArray.push(results[i].manager_id);
+            }
+            return managerArray;
+          },
+        },
+      ])
+      .then((answer) => {
+        let managerid = managerArray.indexOf(answer.manager) + 1;
+        console.log(managerid);
+        let qry1 =
+          "SELECT first_name,last_name,manager_id FROM employee where manager_id=?";
+        db.query(qry1, managerid, (err, results1) => {
+          if (err) throw err;
+          console.table(results1);
+          start();
+        });
+      });
+  });
+}
 
+function departmentBudget() {
+  let deptArray = [];
+  let qry = "SELECT * from DEPARTMENT";
+  db.query(qry, (err, results) => {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "deptname",
+          type: "list",
+          message: "Select the department ,to view its utilized budget",
+          choices: function () {
+            for (let i = 0; i < results.length; i++) {
+              deptArray.push(results[i].dept_name);
+            }
+            return deptArray;
+          },
+        },
+      ])
+      .then((answer) => {
+        let deptid = deptArray.indexOf(answer.deptname) + 1;
+        console.log(deptid);
+        let qry2 =
+          "SELECT department.dept_name,SUM(roles.salary) FROM roles JOIN department WHERE roles.department_id=department.id ";
+        db.query(qry2, deptid, (err, results2) => {
+          if (err) throw err;
+          console.table(results2);
+          start();
+        });
+      });
+  });
+}
 function exitPrompt() {
   db.end();
 }
